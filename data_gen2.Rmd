@@ -1,0 +1,121 @@
+---
+title: "8160 data gen"
+date: "2023-02-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
+library(glmnet)
+library(tidyverse)
+```
+
+```{r data generation function 1}
+data_gen1 <- function(n_beta = 40,
+                     n_strong = 5,
+                     n_wai = 10,
+                     n_wbc = 10,
+                     cor = 0.3,
+                     n_samps = 10000,
+                     c = 1){
+  # compute the number of null predictors to generate
+  n_null = n_beta - n_strong - n_wai - n_wbc
+  
+  # randomly generate site for strong, wai, and wbc predictors
+  b_strong_ind <- sample(seq(1, n_beta), size = n_strong) 
+  b_wai_ind <- sample(seq(1, n_beta)[-b_strong_ind], size = n_wai)
+  b_wbc_ind <- sample(seq(1, n_beta)[-c(b_strong_ind, b_wai_ind)], size = n_wbc)
+  b_null_ind <- sample(seq(1, n_beta)[-c(b_strong_ind, b_wai_ind, b_wbc_ind)],
+                       size = n_null)
+  
+  # generate correlation matrix
+  cor_mat <- diag(n_beta)
+  cor_mat[b_strong_ind, b_wbc_ind] <- cor
+  cor_mat[b_wbc_ind, b_strong_ind] <- cor
+  
+  # generate data from multivariate normal distribution from the 
+  # above correlation matrix
+  X = mvrnorm(n = n_samps, mu = rep(0, n_beta), 
+            Sigma = cor_mat, 
+            empirical = F,
+            tol = 0.9)
+  
+  # threshold for strong vs. weak beta coefficients
+  threshold = c*sqrt(log(n_beta)/n_samps)
+  
+  # generate betas
+  strong_beta <- runif(n_strong, threshold, 3*threshold) # strong betas
+  wai_beta <- runif(n_wai, 0, threshold) # wai betas
+  wbc_beta <- runif(n_wbc, 0, threshold) # wbc betas
+  
+  # assign betas based on predictor ndex
+  all_beta <- rep(0, n_beta)
+  all_beta[b_strong_ind] <- strong_beta
+  all_beta[b_wai_ind] <- wai_beta
+  all_beta[b_wbc_ind] <- wbc_beta
+  
+  # generate data where forward selection and LASSO are to be ran
+  Y = 1 + X %*% all_beta + rnorm(n_samps)
+  df <- data.frame(cbind(X, Y))
+  names(df)[n_beta + 1] <- "y"
+  return(list(generated_data = df,
+              b_strong_ind = b_strong_ind,
+              b_wai_ind = b_wai_ind,
+              b_wbc_ind = b_wbc_ind))
+}
+```
+
+Possible scenarios for simulation: (1) Change the # of WBC, WAI, NULL predictors; (2) Add correlation between null predictors and strong predictors
+
+```{r forward selection function}
+fit_forward <- function(data_gen_obj){
+  
+  # extract generated data 
+  df <- data_gen_obj$generated_data 
+  
+  # run forward selection
+  fit <- step(object = lm(y ~ 1, data = df),
+                      scope = formula(lm(y ~ ., data = df)), 
+                      direction = "forward", 
+                      k = 2, 
+                      trace = 0) 
+  # extract information for later use
+  forward_summ <- summary(fit) # fitted model summary
+  var_selected <- variable.names(fit) # selected variables
+  
+  return(list(forward_summ = forward_summ,
+              var_selected = var_selected))
+}
+
+forward_summ <- fit_forward(data1)
+forward_summ
+```
+
+```{r lasso function}
+fit_lasso <- function(data_gen_obj){
+  
+  # extract generated data 
+  df <- data_gen_obj$generated_data 
+  
+  # run lasso
+  fit <- cv.glmnet(as.matrix(df[,-ncol(df)]),
+                       df$y, 
+                       nfolds = 5, 
+                       type.measure = "mse") # 5-fold CV using mean square error
+  param_best <- fit$glmnet.fit$beta[, fit$lambda == fit$lambda.1se] 
+  
+  # extract information for later use
+  est_beta <- param_best[param_best != 0]
+  var_selected <- names(est_beta) # selected variables
+  
+  return(list(var_selected = var_selected,
+              est_beta = est_beta))
+}
+
+lasso_summ <- fit_lasso(data1)
+lasso_summ
+```
+
+
+
+
