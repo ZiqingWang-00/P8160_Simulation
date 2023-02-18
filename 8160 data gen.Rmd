@@ -1,0 +1,70 @@
+---
+title: "8160 data gen"
+date: "2023-02-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
+library(tidyverse)
+```
+
+
+```{r}
+#generation of corrlation matrix
+p=40
+cor_matrix=diag(p)
+num.strong = 5
+num.wai = 10
+num.wbc = 10 
+n.null = p - sum(num.strong, num.wai,num.wbc)
+
+## generate site
+strong.site=c(1,2,3,4,5)
+wai.site=c(6:15)
+wbc.site=c(16:25)
+
+# set cor value
+cor_small=runif(num.strong*num.wbc,0.1,0.3)
+cor_matrix[strong.site,wbc.site]=cor_matrix[wbc.site,strong.site]=cor_small
+```
+
+```{r}
+# generate data
+X = mvrnorm(n = n, mu = rep(0, p), 
+            Sigma = cor_matrix, 
+            empirical = F)
+
+#weak.threshold = c * sqrt(log(p) / n)
+ # b.true = c(
+  #  rep(5, num.strong),
+   # rep(weak.threshold, num.wai), 
+    #rep(weak.threshold, num.wbc),
+    #rep(0, n.null) )
+  
+#strong and weak beta?
+#b.true <- rnorm(p) * (runif(p) < 0.2)
+
+
+# generate outcome
+Y = 1 + X%*%b.true + rnorm(n)
+data = as.tibble(data.frame(cbind(X, Y)))
+cols = c(
+    paste("Strong", 1:num.strong, sep = ""),
+    paste("WAI", 1:num.wai, sep = ""),
+    paste("WBC", 1:num.wbc, sep = ""),
+    paste("Null", 1:n.null, sep = ""),
+    "Y"
+  )
+colnames(data) = cols
+```
+
+
+```{r}
+
+```
+
+
+
+
+
