@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(MASS)
 library(glmnet)
 library(tidyverse)
+library(ggplot2)
 ```
 
 ```{r data generation function 1}
@@ -38,7 +39,7 @@ data_gen1 <- function(n_beta = 40,
   X = mvrnorm(n = n_samps, mu = rep(0, n_beta), 
             Sigma = cor_mat, 
             empirical = F,
-            tol = 0.9)
+            tol = 0.5)
   
   # threshold for strong vs. weak beta coefficients
   threshold = c*sqrt(log(n_beta)/n_samps)
@@ -63,6 +64,9 @@ data_gen1 <- function(n_beta = 40,
               b_wai_ind = b_wai_ind,
               b_wbc_ind = b_wbc_ind))
 }
+
+data1 <- data_gen1()
+
 ```
 
 Possible scenarios for simulation: (1) Change the # of WBC, WAI, NULL predictors; (2) Add correlation between null predictors and strong predictors
@@ -117,5 +121,63 @@ lasso_summ
 ```
 
 
+```{r helper functions}
+# check whether strong/wbc/wai indicators were correctly identified
+check_pct_identified <- function(data_obj, fit_obj){
+  # get indices
+  b_strong_ind <- data_obj$b_strong_ind
+  b_wbc_ind <- data_obj$b_wbc_ind
+  b_wai_ind <- data_obj$b_wai_ind
+  
+  # get variable names
+  strong_ind_name <- paste("X", b_strong_ind, sep="")
+  wai_ind_name <- paste("X", b_wai_ind, sep="")
+  wbc_ind_name <- paste("X", b_wbc_ind, sep="")
+  
+  # check how many strong/wbc/wai indicators were correctly identified
+  pct_strong_identified <- length(intersect(strong_ind_name, fit_obj$var_selected))/length(strong_ind_name) * 100
+  pct_wai_identified <- length(intersect(wai_ind_name, fit_obj$var_selected))/length(wai_ind_name) * 100
+  pct_wbc_identified <- length(intersect(wbc_ind_name, fit_obj$var_selected))/length(wbc_ind_name) * 100
+
+  return(list(pct_strong_identified = pct_strong_identified,
+              pct_wai_identified = pct_wai_identified,
+              pct_wbc_identified = pct_wbc_identified))
+}
+```
+
+
+Count the probability of successfully identifying strong, WAI, WBC predictors using forward selection:
+
+```{r}
+set.seed(1)
+n_sim <- 5
+pct_strong_vec <- rep(NA, n_sim)
+pct_wai_vec <- rep(NA, n_sim)
+pct_wbc_vec <- rep(NA, n_sim)
+
+# run forward selection simulation in default data_gen1 setting for 1000 times
+for (i in 1:n_sim){
+  print(i)
+  # generate data and run forward selection
+  data_obj <- data_gen1()
+  forward_out <- fit_forward(data_obj)
+  
+  # get percentages of strong/wai/wbc indicators correctly identified
+  pct_out <- check_pct_identified(data_obj, forward_out)
+  
+  # assign above results to a vector
+  pct_strong_vec[i] <- pct_out$pct_strong_identified
+  pct_wai_vec[i] <- pct_out$pct_wai_identified
+  pct_wbc_vec[i] <- pct_out$pct_wbc_identified
+}
+```
+
+```{r}
+# mean percentages of strong/wai/wbc indicators correctly identified
+mean(pct_strong_vec)
+mean(pct_wai_vec)
+mean(pct_wbc_vec)
+
+```
 
 
