@@ -1,0 +1,99 @@
+---
+title: "output_analysis"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+```
+
+## Varying correlation between strong and WBC indicators
+
+Load simulation output:
+```{r}
+forward_cor_simdata <- read_csv("./simulation_outputs/varying_corr_out_forward.csv")
+lasso_cor_simdata <- read_csv("./simulation_outputs/varying_corr_out_lasso.csv")
+```
+
+Change the above data to long format for easier visualization
+```{r}
+forward_cor_simdata_cleaned <- forward_cor_simdata %>% 
+  select(-1) %>% 
+  mutate(cor_val = factor(cor_val)) %>% 
+  pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
+                           names_to = "metric") %>% 
+  mutate(method = "forward")
+
+forward_cor_simdata_cleaned
+
+lasso_cor_simdata_cleaned <- lasso_cor_simdata %>% 
+  select(-1) %>% 
+  mutate(cor_val = factor(cor_val)) %>% 
+  pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
+                           names_to = "metric") %>% 
+  #group_by(cor_val, metric) %>% 
+  #summarize(mean_pct = mean(value))
+  mutate(method = "lasso")
+
+combined_cor_simdata <- rbind(forward_cor_simdata_cleaned, lasso_cor_simdata_cleaned)
+combined_cor_simdata
+```
+
+Compare the probability of correctly selecting strong, wai, wbc indicators for forward selection and LASSO, respectively:
+```{r}
+# WBC
+combined_cor_simdata %>% 
+  filter(metric == "pct_wbc_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~cor_val, nrow = 1) +
+  labs(title = "% WBC predictors selected for differeent correlations \n between strong and WBC predictors",
+       y = "%")
+
+# WAI
+combined_cor_simdata %>% 
+  filter(metric == "pct_wai_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~cor_val, nrow = 1) +
+  labs(title = "% WAI predictors selected for differeent correlations \n between strong and WBC predictors",
+       y = "%")
+
+```
+
+Compare the power and type-1 errors for forward selection and LASSO, respectively:
+```{r}
+# power
+combined_cor_simdata %>% 
+  filter(metric == "power_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~cor_val, nrow = 1) +
+  labs(title = "Power (%) for differeent correlations between strong and WBC predictors",
+       y = "%")
+
+# Type-1 error
+combined_cor_simdata %>% 
+  filter(metric == "type1_error_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~cor_val, nrow = 1) +
+  labs(title = "Type-1 error rate (%) for differeent correlations \n between strong and WBC predictors",
+       y = "%")
+
+```
+
+
+
+

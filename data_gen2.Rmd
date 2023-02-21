@@ -136,20 +136,24 @@ check_pct_identified <- function(data_obj, fit_obj){
   wai_ind_name <- paste("X", b_wai_ind, sep="")
   wbc_ind_name <- paste("X", b_wbc_ind, sep="")
   null_ind_name <- paste("X", b_null_ind, sep = "")
+  predictor_ind_name <- c(strong_ind_name, wai_ind_name, wbc_ind_name)
   
-  # check how many strong/wbc/wai indicators were correctly identified
+  # check how many strong/wbc/wai/null indicators were selected
   pct_strong_identified <- length(intersect(strong_ind_name, fit_obj$var_selected))/length(strong_ind_name) * 100
   pct_wai_identified <- length(intersect(wai_ind_name, fit_obj$var_selected))/length(wai_ind_name) * 100
   pct_wbc_identified <- length(intersect(wbc_ind_name, fit_obj$var_selected))/length(wbc_ind_name) * 100
-  pct_null_identified <- length(intersect(null_ind_name, fit_obj$var_selected))/length(null_ind_name) * 100
+  pct_null_identified <- length(intersect(null_ind_name, fit_obj$var_selected))/length(null_ind_name) * 100 # type 1 error
+  pct_identified <- length(intersect(predictor_ind_name, fit_obj$var_selected))/length(predictor_ind_name) * 100 # power
+  
 
   return(list(pct_strong_identified = pct_strong_identified,
               pct_wai_identified = pct_wai_identified,
               pct_wbc_identified = pct_wbc_identified,
-              type1_error = pct_null_identified))
+              type1_error = pct_null_identified,
+              power = pct_identified))
 }
 
-check_pct_identified(data1, lasso_summ)
+check_pct_identified(data1, forward_summ)
 ```
 
 
@@ -158,16 +162,17 @@ check_pct_identified(data1, lasso_summ)
 Count the probability of successfully identifying strong, WAI, WBC predictors using & the type-1 error using forward selection:
 
 ```{r}
-set.seed(1)
+set.seed(123)
 
-n_sim <- 2
+n_sim <- 100
 corr_vec <- seq(0.1, 0.9, 0.2)
 varying_corr_out_forward <- data.frame(
   cor_val = rep(corr_vec, each = n_sim),
   pct_strong_vec = rep(NA, length(corr_vec) * n_sim),
   pct_wai_vec = rep(NA, length(corr_vec) * n_sim),
   pct_wbc_vec = rep(NA, length(corr_vec) * n_sim),
-  type1_error_vec = rep(NA, length(corr_vec) * n_sim)
+  type1_error_vec = rep(NA, length(corr_vec) * n_sim),
+  power_vec = rep(NA, length(corr_vec) * n_sim)
 )
 
 for (j in 1:length(corr_vec)){
@@ -176,10 +181,11 @@ for (j in 1:length(corr_vec)){
   pct_wai_vec <- rep(NA, n_sim)
   pct_wbc_vec <- rep(NA, n_sim)
   type1_error_vec <- rep(NA, n_sim)
+  power_vec <- rep(NA, n_sim)
 
   # run forward selection simulation in default data_gen1 setting for 100 times
   for (i in 1:n_sim){
-    print(paste("current sim: ", i))
+    #print(paste("current sim: ", i))
     # generate data and run forward selection
     data_obj <- data_gen1(cor = corr_vec[j])
     forward_out <- fit_forward(data_obj)
@@ -192,6 +198,7 @@ for (j in 1:length(corr_vec)){
     pct_wai_vec[i] <- pct_out$pct_wai_identified
     pct_wbc_vec[i] <- pct_out$pct_wbc_identified
     type1_error_vec[i] <- pct_out$type1_error
+    power_vec[i] <- pct_out$power
   
   } 
   
@@ -200,12 +207,14 @@ for (j in 1:length(corr_vec)){
   varying_corr_out_forward[((j-1)*n_sim+1):(j*n_sim), 3] <- pct_wai_vec
   varying_corr_out_forward[((j-1)*n_sim+1):(j*n_sim), 4] <- pct_wbc_vec
   varying_corr_out_forward[((j-1)*n_sim+1):(j*n_sim), 5] <- type1_error_vec
+  varying_corr_out_forward[((j-1)*n_sim+1):(j*n_sim), 6] <- power_vec
   
   print(paste("current j: ", j))
     
 }
 
-varying_corr_out_forward
+write.csv(varying_corr_out_forward, "./simulation_outputs/varying_corr_out_forward.csv")
+
 ```
 
 ### LASSO selection
@@ -213,14 +222,15 @@ Count the probability of successfully identifying strong, WAI, WBC predictors us
 ```{r}
 set.seed(123)
 
-n_sim <- 10
+n_sim <- 100
 corr_vec <- seq(0.1, 0.9, 0.2)
 varying_corr_out_lasso <- data.frame(
   cor_val = rep(corr_vec, each = n_sim),
   pct_strong_vec = rep(NA, length(corr_vec) * n_sim),
   pct_wai_vec = rep(NA, length(corr_vec) * n_sim),
   pct_wbc_vec = rep(NA, length(corr_vec) * n_sim),
-  type1_error_vec = rep(NA, length(corr_vec) * n_sim)
+  type1_error_vec = rep(NA, length(corr_vec) * n_sim),
+  power_vec = rep(NA, length(corr_vec) * n_sim)
 )
 
 for (j in 1:length(corr_vec)){
@@ -229,10 +239,11 @@ for (j in 1:length(corr_vec)){
   pct_wai_vec <- rep(NA, n_sim)
   pct_wbc_vec <- rep(NA, n_sim)
   type1_error_vec <- rep(NA, n_sim)
+  power_vec <- rep(NA, n_sim)
 
-  # run forward selection simulation in default data_gen1 setting for 100 times
+  # run LASSO selection simulation in default data_gen1 setting for 100 times
   for (i in 1:n_sim){
-    print(paste("current sim: ", i))
+    #print(paste("current sim: ", i))
     # generate data and run forward selection
     data_obj <- data_gen1(cor = corr_vec[j])
     lasso_out <- fit_lasso(data_obj)
@@ -245,6 +256,7 @@ for (j in 1:length(corr_vec)){
     pct_wai_vec[i] <- pct_out$pct_wai_identified
     pct_wbc_vec[i] <- pct_out$pct_wbc_identified
     type1_error_vec[i] <- pct_out$type1_error
+    power_vec[i] <- pct_out$power
   
   } 
   
@@ -253,12 +265,13 @@ for (j in 1:length(corr_vec)){
   varying_corr_out_lasso[((j-1)*n_sim+1):(j*n_sim), 3] <- pct_wai_vec
   varying_corr_out_lasso[((j-1)*n_sim+1):(j*n_sim), 4] <- pct_wbc_vec
   varying_corr_out_lasso[((j-1)*n_sim+1):(j*n_sim), 5] <- type1_error_vec
+  varying_corr_out_lasso[((j-1)*n_sim+1):(j*n_sim), 6] <- power_vec
   
   print(paste("current j: ", j))
     
 }
 
-varying_corr_out_lasso
+write.csv(varying_corr_out_lasso, "./simulation_outputs/varying_corr_out_lasso.csv")
 ```
 
 
