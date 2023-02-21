@@ -18,7 +18,7 @@ data_gen1 <- function(n_beta = 40,
                      n_wbc = 10,
                      cor = 0.3,
                      n_samps = 10000,
-                     c = 1){
+                     c = 3){
   # compute the number of null predictors to generate
   n_null = n_beta - n_strong - n_wai - n_wbc
   
@@ -88,7 +88,7 @@ fit_forward <- function(data_gen_obj){
   forward_summ <- summary(fit) # fitted model summary
   var_selected <- variable.names(fit)[-1] # selected variables
   
-  return(list(forward_summ = forward_summ,
+  return(list(est_beta = forward_summ$coefficient[,1][-1],
               var_selected = var_selected))
 }
 
@@ -148,12 +148,14 @@ check_pct_identified <- function(data_obj, fit_obj){
               pct_wbc_identified = pct_wbc_identified,
               type1_error = pct_null_identified))
 }
+
+check_pct_identified(data1, lasso_summ)
 ```
 
 
 ## Varying correlation (0.1, 0.3, 0.5, 0.7, 0.9)
 ### Forward selection
-Count the probability of successfully identifying strong, WAI, WBC predictors using forward selection:
+Count the probability of successfully identifying strong, WAI, WBC predictors using & the type-1 error using forward selection:
 
 ```{r}
 set.seed(1)
@@ -177,7 +179,7 @@ for (j in 1:length(corr_vec)){
 
   # run forward selection simulation in default data_gen1 setting for 100 times
   for (i in 1:n_sim){
-    print(i)
+    print(paste("current sim: ", i))
     # generate data and run forward selection
     data_obj <- data_gen1(cor = corr_vec[j])
     forward_out <- fit_forward(data_obj)
@@ -199,19 +201,64 @@ for (j in 1:length(corr_vec)){
   varying_corr_out_forward[((j-1)*n_sim+1):(j*n_sim), 4] <- pct_wbc_vec
   varying_corr_out_forward[((j-1)*n_sim+1):(j*n_sim), 5] <- type1_error_vec
   
-  print(j)
+  print(paste("current j: ", j))
     
 }
 
 varying_corr_out_forward
 ```
 
+### LASSO selection
+Count the probability of successfully identifying strong, WAI, WBC predictors using & the type-1 error using LASSO:
 ```{r}
-# mean percentages of strong/wai/wbc indicators correctly identified
-mean(pct_strong_vec)
-mean(pct_wai_vec)
-mean(pct_wbc_vec)
-mean(type1_error_vec)
+set.seed(123)
+
+n_sim <- 10
+corr_vec <- seq(0.1, 0.9, 0.2)
+varying_corr_out_lasso <- data.frame(
+  cor_val = rep(corr_vec, each = n_sim),
+  pct_strong_vec = rep(NA, length(corr_vec) * n_sim),
+  pct_wai_vec = rep(NA, length(corr_vec) * n_sim),
+  pct_wbc_vec = rep(NA, length(corr_vec) * n_sim),
+  type1_error_vec = rep(NA, length(corr_vec) * n_sim)
+)
+
+for (j in 1:length(corr_vec)){
+  
+  pct_strong_vec <- rep(NA, n_sim)
+  pct_wai_vec <- rep(NA, n_sim)
+  pct_wbc_vec <- rep(NA, n_sim)
+  type1_error_vec <- rep(NA, n_sim)
+
+  # run forward selection simulation in default data_gen1 setting for 100 times
+  for (i in 1:n_sim){
+    print(paste("current sim: ", i))
+    # generate data and run forward selection
+    data_obj <- data_gen1(cor = corr_vec[j])
+    lasso_out <- fit_lasso(data_obj)
+  
+    # get percentages of strong/wai/wbc indicators correctly identified
+    pct_out <- check_pct_identified(data_obj, lasso_out)
+  
+    # assign above results to a vector
+    pct_strong_vec[i] <- pct_out$pct_strong_identified
+    pct_wai_vec[i] <- pct_out$pct_wai_identified
+    pct_wbc_vec[i] <- pct_out$pct_wbc_identified
+    type1_error_vec[i] <- pct_out$type1_error
+  
+  } 
+  
+  # combine to data frame
+  varying_corr_out_lasso[((j-1)*n_sim+1):(j*n_sim), 2] <- pct_strong_vec
+  varying_corr_out_lasso[((j-1)*n_sim+1):(j*n_sim), 3] <- pct_wai_vec
+  varying_corr_out_lasso[((j-1)*n_sim+1):(j*n_sim), 4] <- pct_wbc_vec
+  varying_corr_out_lasso[((j-1)*n_sim+1):(j*n_sim), 5] <- type1_error_vec
+  
+  print(paste("current j: ", j))
+    
+}
+
+varying_corr_out_lasso
 ```
 
 
