@@ -63,7 +63,8 @@ data_gen1 <- function(n_beta = 40,
               b_strong_ind = b_strong_ind,
               b_wai_ind = b_wai_ind,
               b_wbc_ind = b_wbc_ind,
-              b_null_ind = b_null_ind))
+              b_null_ind = b_null_ind,
+              beta_0=all_beta))
 }
 
 data1 <- data_gen1()
@@ -120,6 +121,31 @@ fit_lasso <- function(data_gen_obj){
 lasso_summ <- fit_lasso(data1)
 lasso_summ
 ```
+
+```{r calculate beta_se functions}
+check_beta_se<-function(data_obj,fit_obj){
+  #get beta_0
+  beta_0<-data_obj$beta_0
+  #get beta_hat
+  var_select<-names(fit_obj$est_beta)
+  beta_select<-unname(fit_obj$est_beta)
+
+  new_vec <- as.numeric(gsub("X", "",var_select))
+
+  beta_hat=rep(0,length(beta_0))
+  beta_hat[new_vec]=unname(fit_obj$est_beta) 
+  
+  #
+  beta_data<-data.frame(beta_0,beta_hat) %>% 
+    mutate(se=(beta_0-beta_hat)^2)
+  return(list(beta_data$se,sse=sum(beta_data$se)))
+}
+
+check_beta_se(data1,forward_summ)
+check_beta_se(data1,lasso_summ)
+```
+
+
 
 
 ```{r helper functions}
@@ -273,5 +299,62 @@ for (j in 1:length(corr_vec)){
 
 write.csv(varying_corr_out_lasso, "./simulation_outputs/varying_corr_out_lasso.csv")
 ```
+
+##simulation of beta_sse
+### Varying correlation (0.1, 0.3, 0.5, 0.7, 0.9)
+```{r}
+## forward AIC
+simu_forward_betasse<-function(n_sim,c){
+  beta_sse=rep(NA,n_sim)
+  for (i in 1:n_sim) {
+    print(i)
+    data_obj<-data_gen1(cor = c)
+    forward_out<-fit_forward(data_obj)
+  
+    sse_out<-check_beta_se(data_obj,forward_out)
+    beta_sse[i]=sse_out$sse
+  }
+  ##bind results together
+  sim_sse<-data.frame(cor=rep(c,n_sim),beta_sse)
+  return(sim_sse)
+}
+
+## simu for 100 times forward
+sse_0.1<-simu_forward_betasse(100,0.1)
+sse_0.3<-simu_forward_betasse(100,0.3)
+sse_0.5<-simu_forward_betasse(100,0.5)
+sse_0.7<-simu_forward_betasse(100,0.7)
+sse_0.9<-simu_forward_betasse(100,0.9)
+
+sse_forward<-rbind(sse_0.1,sse_0.3,sse_0.5,sse_0.7,sse_0.9)
+write.csv(sse_forward,"output_analysis_files/sse_forward.csv")
+
+## lasso
+simu_lasso_betasse<-function(n_sim,c){
+  beta_sse_lasso=rep(NA,n_sim)
+  for (i in 1:n_sim) {
+    print(i)
+    data_obj<-data_gen1(cor = c)
+    lasso_out<-fit_lasso(data_obj)
+  
+    sse_out<-check_beta_se(data_obj,lasso_out)
+    beta_sse_lasso[i]=sse_out$sse
+  }
+  ##bind results together
+  sim_sse<-data.frame(cor=rep(c,n_sim),beta_sse_lasso)
+  return(sim_sse)
+}
+
+#### simu for 100 times lasso
+sse_0.1_lasso<-simu_forward_betasse(100,0.1)
+sse_0.3_lasso<-simu_forward_betasse(100,0.3)
+sse_0.5_lasso<-simu_forward_betasse(100,0.5)
+sse_0.7_lasso<-simu_forward_betasse(100,0.7)
+sse_0.9_lasso<-simu_forward_betasse(100,0.9)
+
+sse_lasso<-rbind(sse_0.1_lasso,sse_0.3_lasso,sse_0.5_lasso,sse_0.7_lasso,sse_0.9_lasso)
+write.csv(sse_lasso,"output_analysis_files/sse_lasso.csv")
+```
+
 
 
