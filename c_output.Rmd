@@ -1,0 +1,94 @@
+---
+title: "change_c"
+author: "Yujia Li"
+date: "2023-02-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
+library(glmnet)
+library(tidyverse)
+library(ggplot2)
+```
+
+
+
+#dataset
+```{r}
+lasso_c_simdata <- read_csv("varying_c_lasso.csv") %>%
+  select(-1) %>%
+  mutate(c.val = factor(c.val)) %>%
+  pivot_longer(cols = c(pct_strong_vec, 
+                        pct_wai_vec, 
+                        pct_wbc_vec, 
+                        type1_error_vec, 
+                        power_vec),
+                           names_to = "metric") %>% 
+  #group_by(cor_val, metric) %>% 
+  #summarize(mean_pct = mean(value))
+  mutate(method = "lasso")
+
+forward_c_simdata <- read.csv("varying_c_forward.csv")%>% 
+  select(-1) %>% 
+  mutate(c.val = factor(c.val)) %>% 
+  pivot_longer(cols = c(pct_strong_vec, 
+                        pct_wai_vec, 
+                        pct_wbc_vec, 
+                        type1_error_vec, 
+                        power_vec),
+                           names_to = "metric") %>% 
+  mutate(method = "forward")
+
+combined_c_simdata <- rbind(forward_c_simdata, lasso_c_simdata)
+
+```
+
+
+#graph for WBC
+```{r}
+# WBC
+combined_c_simdata %>% 
+  filter(metric == "pct_wbc_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~c.val, nrow = 1) +
+  labs(title = "% WBC predictors selected for differeent c",
+       y = "%")
+```
+
+
+#graph for WAI
+```{r}
+# WAI
+combined_c_simdata %>% 
+  filter(metric == "pct_wai_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~c.val, nrow = 1) +
+  labs(title = "% WAI predictors selected for differeent c",
+       y = "%")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
