@@ -170,16 +170,17 @@ check_pct_identified <- function(data_obj, fit_obj){
   pct_wbc_identified <- length(intersect(wbc_ind_name, fit_obj$var_selected))/length(wbc_ind_name) * 100
   pct_null_identified <- length(intersect(null_ind_name, fit_obj$var_selected))/length(null_ind_name) * 100 # type 1 error
   pct_identified <- length(intersect(predictor_ind_name, fit_obj$var_selected))/length(predictor_ind_name) * 100 # power
-  
+  pct_weak_identified <- length(intersect(c(wbc_ind_name, wai_ind_name), fit_obj$var_selected))/length(c(wbc_ind_name, wai_ind_name)) * 100
 
   return(list(pct_strong_identified = pct_strong_identified,
               pct_wai_identified = pct_wai_identified,
               pct_wbc_identified = pct_wbc_identified,
               type1_error = pct_null_identified,
-              power = pct_identified))
+              power = pct_identified,
+              pct_weak_identified = pct_weak_identified))
 }
 
-check_pct_identified(data1, forward_summ)
+check_pct_identified(data1, lasso_summ)
 ```
 
 
@@ -297,10 +298,10 @@ for (j in 1:length(corr_vec)){
     
 }
 
-write.csv(varying_corr_out_lasso, "./simulation_outputs/varying_corr_out_lasso.csv")
+write.csv(varying_corr_out_lasso, "./simulation_outputs/varying_corr_out_lasso_223_1.csv")
 ```
 
-##simulation of beta_sse
+## simulation of beta_sse
 ### Varying correlation (0.1, 0.3, 0.5, 0.7, 0.9)
 ```{r}
 ## forward AIC
