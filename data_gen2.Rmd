@@ -335,7 +335,7 @@ for (j in 1:length(wbc_vec)){
     forward_out <- fit_forward(data_obj)
   
     # get percentages of strong/wai/wbc indicators correctly identified
-    pct_out <- check_pct_identified(data_obj, lasso_out)
+    pct_out <- check_pct_identified(data_obj, forward_out)
   
     # assign above results to a vector
     pct_strong_vec[i] <- pct_out$pct_strong_identified
@@ -419,7 +419,7 @@ for (j in 1:length(wbc_vec)){
 write.csv(varying_wbc_out_lasso, "./simulation_outputs/varying_wbc_out_lasso.csv")
 ```
 
-## Varying the number of WBC predictors
+## Varying the number of WAI predictors
 ### Forward
 ```{r}
 set.seed(123)

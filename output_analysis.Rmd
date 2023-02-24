@@ -21,7 +21,7 @@ lasso_cor_simdata <- read_csv("./simulation_outputs/varying_corr_out_lasso.csv")
 Change the above data to long format for easier visualization
 ```{r}
 forward_cor_simdata_cleaned <- forward_cor_simdata %>% 
-  select(-1) %>% 
+  dplyr::select(-1) %>% 
   mutate(cor_val = factor(cor_val)) %>% 
   pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
                            names_to = "metric") %>% 
@@ -30,7 +30,7 @@ forward_cor_simdata_cleaned <- forward_cor_simdata %>%
 forward_cor_simdata_cleaned
 
 lasso_cor_simdata_cleaned <- lasso_cor_simdata %>% 
-  select(-1) %>% 
+  dplyr::select(-1) %>% 
   mutate(cor_val = factor(cor_val)) %>% 
   pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
                            names_to = "metric") %>% 
@@ -52,7 +52,7 @@ combined_cor_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~cor_val, nrow = 1) +
-  labs(title = "% WBC predictors selected for differeent correlations \n between strong and WBC predictors",
+  labs(title = "% WBC predictors selected for different correlations \n between strong and WBC predictors",
        y = "%")
 
 # WAI
@@ -63,7 +63,7 @@ combined_cor_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~cor_val, nrow = 1) +
-  labs(title = "% WAI predictors selected for differeent correlations \n between strong and WBC predictors",
+  labs(title = "% WAI predictors selected for different correlations \n between strong and WBC predictors",
        y = "%")
 
 ```
@@ -78,7 +78,7 @@ combined_cor_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~cor_val, nrow = 1) +
-  labs(title = "Power (%) for differeent correlations between strong and WBC predictors",
+  labs(title = "Power (%) for different correlations between strong and WBC predictors",
        y = "power (%)")
 
 # Type-1 error
@@ -89,8 +89,8 @@ combined_cor_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~cor_val, nrow = 1) +
-  labs(title = "Type-1 error rate (%) for differeent correlations \n between strong and WBC predictors",
-       y = "power (%)")
+  labs(title = "Type-1 error rate (%) for different correlations \n between strong and WBC predictors",
+       y = "Type-1 error rate (%)")
 
 ```
 
@@ -103,7 +103,7 @@ forward_wbc_simdata <- read_csv("./simulation_outputs/varying_wbc_out_forward.cs
 
 ```{r}
 forward_wbc_simdata_cleaned <- forward_wbc_simdata %>% 
-  select(-1) %>% 
+  dplyr::select(-1) %>% 
   mutate(wbc_num = factor(wbc_num)) %>% 
   pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
                            names_to = "metric") %>% 
@@ -112,7 +112,7 @@ forward_wbc_simdata_cleaned <- forward_wbc_simdata %>%
 forward_wbc_simdata_cleaned
 
 lasso_wbc_simdata_cleaned <- lasso_wbc_simdata %>% 
-  select(-1) %>% 
+  dplyr::select(-1) %>% 
   mutate(wbc_num = factor(wbc_num)) %>% 
   pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
                            names_to = "metric") %>% 
@@ -133,8 +133,8 @@ combined_wbc_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~wbc_num, nrow = 1) +
-  labs(title = "Power (%) for differeent number of WBC predictors",
-       y = "%")
+  labs(title = "Power (%) for different number of WBC predictors",
+       y = "power %")
 
 # Type-1 error
 combined_wbc_simdata %>% 
@@ -144,8 +144,8 @@ combined_wbc_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~wbc_num, nrow = 1) +
-  labs(title = "Type-1 error rate (%) for differeent number of WBC predictors",
-       y = "%")
+  labs(title = "Type-1 error rate (%) for different number of WBC predictors",
+       y = "type-1 error %")
 ```
 
 ## Varying the number of WAI predictors
@@ -154,7 +154,7 @@ lasso_wai_simdata <- read_csv("./simulation_outputs/varying_wai_out_lasso.csv")
 forward_wai_simdata <- read_csv("./simulation_outputs/varying_wai_out_forward.csv")
 
 forward_wai_simdata_cleaned <- forward_wai_simdata %>% 
-  select(-1) %>% 
+  dplyr::select(-1) %>% 
   mutate(wai_vec = factor(wai_vec)) %>% 
   pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
                            names_to = "metric") %>% 
@@ -163,7 +163,7 @@ forward_wai_simdata_cleaned <- forward_wai_simdata %>%
 #forward_wai_simdata_cleaned
 
 lasso_wai_simdata_cleaned <- lasso_wai_simdata %>% 
-  select(-1) %>% 
+  dplyr::select(-1) %>% 
   mutate(wai_vec = factor(wai_vec)) %>% 
   pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
                            names_to = "metric") %>% 
@@ -182,7 +182,7 @@ combined_wai_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~wai_vec, nrow = 1) +
-  labs(title = "Power (%) for differeent number of WAI predictors",
+  labs(title = "Power (%) for different number of WAI predictors",
        y = "%")
 
 # Type-1 error
@@ -193,7 +193,7 @@ combined_wai_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~wai_vec, nrow = 1) +
-  labs(title = "Type-1 error rate (%) for differeent number of WAI predictors",
+  labs(title = "Type-1 error rate (%) for different number of WAI predictors",
        y = "%")
 
 ```
