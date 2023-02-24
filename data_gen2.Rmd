@@ -251,6 +251,7 @@ set.seed(123)
 
 n_sim <- 100
 corr_vec <- seq(0.1, 0.9, 0.2)
+
 varying_corr_out_lasso <- data.frame(
   cor_val = rep(corr_vec, each = n_sim),
   pct_strong_vec = rep(NA, length(corr_vec) * n_sim),
@@ -300,6 +301,243 @@ for (j in 1:length(corr_vec)){
 
 write.csv(varying_corr_out_lasso, "./simulation_outputs/varying_corr_out_lasso_223_1.csv")
 ```
+
+## Varying the number of WBC predictors
+### Forward 
+```{r}
+set.seed(123)
+
+n_sim <- 100
+wbc_vec <- c(2, 6, 10, 14)
+
+varying_wbc_out_forward <- data.frame(
+  wbc_num = rep(wbc_vec, each = n_sim),
+  pct_strong_vec = rep(NA, length(wbc_vec) * n_sim),
+  pct_wai_vec = rep(NA, length(wbc_vec) * n_sim),
+  pct_wbc_vec = rep(NA, length(wbc_vec) * n_sim),
+  type1_error_vec = rep(NA, length(wbc_vec) * n_sim),
+  power_vec = rep(NA, length(wbc_vec) * n_sim)
+)
+
+for (j in 1:length(wbc_vec)){
+  
+  pct_strong_vec <- rep(NA, n_sim)
+  pct_wai_vec <- rep(NA, n_sim)
+  pct_wbc_vec <- rep(NA, n_sim)
+  type1_error_vec <- rep(NA, n_sim)
+  power_vec <- rep(NA, n_sim)
+
+  # run forward selection simulation in default data_gen1 setting for 100 times
+  for (i in 1:n_sim){
+    #print(paste("current sim: ", i))
+    # generate data and run LASSO
+    data_obj <- data_gen1(n_wbc = wbc_vec[j])
+    forward_out <- fit_forward(data_obj)
+  
+    # get percentages of strong/wai/wbc indicators correctly identified
+    pct_out <- check_pct_identified(data_obj, lasso_out)
+  
+    # assign above results to a vector
+    pct_strong_vec[i] <- pct_out$pct_strong_identified
+    pct_wai_vec[i] <- pct_out$pct_wai_identified
+    pct_wbc_vec[i] <- pct_out$pct_wbc_identified
+    type1_error_vec[i] <- pct_out$type1_error
+    power_vec[i] <- pct_out$power
+  
+  } 
+  
+  # combine to data frame
+  varying_wbc_out_forward[((j-1)*n_sim+1):(j*n_sim), 2] <- pct_strong_vec
+  varying_wbc_out_forward[((j-1)*n_sim+1):(j*n_sim), 3] <- pct_wai_vec
+  varying_wbc_out_forward[((j-1)*n_sim+1):(j*n_sim), 4] <- pct_wbc_vec
+  varying_wbc_out_forward[((j-1)*n_sim+1):(j*n_sim), 5] <- type1_error_vec
+  varying_wbc_out_forward[((j-1)*n_sim+1):(j*n_sim), 6] <- power_vec
+  
+  print(paste("current j: ", j))
+    
+}
+
+varying_wbc_out_forward
+write.csv(varying_wbc_out_forward, "./simulation_outputs/varying_wbc_out_forward.csv")
+```
+
+
+### LASSO
+```{r}
+set.seed(123)
+
+n_sim <- 100
+wbc_vec <- c(2, 6, 10, 14)
+
+varying_wbc_out_lasso <- data.frame(
+  wbc_num = rep(wbc_vec, each = n_sim),
+  pct_strong_vec = rep(NA, length(wbc_vec) * n_sim),
+  pct_wai_vec = rep(NA, length(wbc_vec) * n_sim),
+  pct_wbc_vec = rep(NA, length(wbc_vec) * n_sim),
+  type1_error_vec = rep(NA, length(wbc_vec) * n_sim),
+  power_vec = rep(NA, length(wbc_vec) * n_sim)
+)
+
+for (j in 1:length(wbc_vec)){
+  
+  pct_strong_vec <- rep(NA, n_sim)
+  pct_wai_vec <- rep(NA, n_sim)
+  pct_wbc_vec <- rep(NA, n_sim)
+  type1_error_vec <- rep(NA, n_sim)
+  power_vec <- rep(NA, n_sim)
+
+  # run LASSO selection simulation in default data_gen1 setting for 100 times
+  for (i in 1:n_sim){
+    #print(paste("current sim: ", i))
+    # generate data and run LASSO
+    data_obj <- data_gen1(n_wbc = wbc_vec[j])
+    lasso_out <- fit_lasso(data_obj)
+  
+    # get percentages of strong/wai/wbc indicators correctly identified
+    pct_out <- check_pct_identified(data_obj, lasso_out)
+  
+    # assign above results to a vector
+    pct_strong_vec[i] <- pct_out$pct_strong_identified
+    pct_wai_vec[i] <- pct_out$pct_wai_identified
+    pct_wbc_vec[i] <- pct_out$pct_wbc_identified
+    type1_error_vec[i] <- pct_out$type1_error
+    power_vec[i] <- pct_out$power
+  
+  } 
+  
+  # combine to data frame
+  varying_wbc_out_lasso[((j-1)*n_sim+1):(j*n_sim), 2] <- pct_strong_vec
+  varying_wbc_out_lasso[((j-1)*n_sim+1):(j*n_sim), 3] <- pct_wai_vec
+  varying_wbc_out_lasso[((j-1)*n_sim+1):(j*n_sim), 4] <- pct_wbc_vec
+  varying_wbc_out_lasso[((j-1)*n_sim+1):(j*n_sim), 5] <- type1_error_vec
+  varying_wbc_out_lasso[((j-1)*n_sim+1):(j*n_sim), 6] <- power_vec
+  
+  print(paste("current j: ", j))
+    
+}
+
+write.csv(varying_wbc_out_lasso, "./simulation_outputs/varying_wbc_out_lasso.csv")
+```
+
+## Varying the number of WBC predictors
+### Forward
+```{r}
+set.seed(123)
+
+n_sim <- 100
+wai_vec <- c(2, 6, 10, 14)
+
+varying_wai_out_forward <- data.frame(
+  wai_vec = rep(wai_vec, each = n_sim),
+  pct_strong_vec = rep(NA, length(wai_vec) * n_sim),
+  pct_wai_vec = rep(NA, length(wai_vec) * n_sim),
+  pct_wbc_vec = rep(NA, length(wai_vec) * n_sim),
+  type1_error_vec = rep(NA, length(wai_vec) * n_sim),
+  power_vec = rep(NA, length(wai_vec) * n_sim)
+)
+
+for (j in 1:length(wai_vec)){
+  
+  pct_strong_vec <- rep(NA, n_sim)
+  pct_wai_vec <- rep(NA, n_sim)
+  pct_wbc_vec <- rep(NA, n_sim)
+  type1_error_vec <- rep(NA, n_sim)
+  power_vec <- rep(NA, n_sim)
+
+  # run forward selection simulation in default data_gen1 setting for 100 times
+  for (i in 1:n_sim){
+    #print(paste("current sim: ", i))
+    # generate data and run LASSO
+    data_obj <- data_gen1(n_wai = wai_vec[j])
+    forward_out <- fit_forward(data_obj)
+  
+    # get percentages of strong/wai/wbc indicators correctly identified
+    pct_out <- check_pct_identified(data_obj, forward_out)
+  
+    # assign above results to a vector
+    pct_strong_vec[i] <- pct_out$pct_strong_identified
+    pct_wai_vec[i] <- pct_out$pct_wai_identified
+    pct_wbc_vec[i] <- pct_out$pct_wbc_identified
+    type1_error_vec[i] <- pct_out$type1_error
+    power_vec[i] <- pct_out$power
+  
+  } 
+  
+  # combine to data frame
+  varying_wai_out_forward[((j-1)*n_sim+1):(j*n_sim), 2] <- pct_strong_vec
+  varying_wai_out_forward[((j-1)*n_sim+1):(j*n_sim), 3] <- pct_wai_vec
+  varying_wai_out_forward[((j-1)*n_sim+1):(j*n_sim), 4] <- pct_wbc_vec
+  varying_wai_out_forward[((j-1)*n_sim+1):(j*n_sim), 5] <- type1_error_vec
+  varying_wai_out_forward[((j-1)*n_sim+1):(j*n_sim), 6] <- power_vec
+  
+  print(paste("current j: ", j))
+    
+}
+
+write.csv(varying_wai_out_forward, "./simulation_outputs/varying_wai_out_forward.csv")
+```
+
+
+
+### LASSO
+```{r}
+set.seed(123)
+
+n_sim <- 100
+wai_vec <- c(2, 6, 10, 14)
+
+varying_wai_out_lasso <- data.frame(
+  wai_vec = rep(wai_vec, each = n_sim),
+  pct_strong_vec = rep(NA, length(wai_vec) * n_sim),
+  pct_wai_vec = rep(NA, length(wai_vec) * n_sim),
+  pct_wbc_vec = rep(NA, length(wai_vec) * n_sim),
+  type1_error_vec = rep(NA, length(wai_vec) * n_sim),
+  power_vec = rep(NA, length(wai_vec) * n_sim)
+)
+
+for (j in 1:length(wai_vec)){
+  
+  pct_strong_vec <- rep(NA, n_sim)
+  pct_wai_vec <- rep(NA, n_sim)
+  pct_wbc_vec <- rep(NA, n_sim)
+  type1_error_vec <- rep(NA, n_sim)
+  power_vec <- rep(NA, n_sim)
+
+  # run LASSO selection simulation in default data_gen1 setting for 100 times
+  for (i in 1:n_sim){
+    #print(paste("current sim: ", i))
+    # generate data and run LASSO
+    data_obj <- data_gen1(n_wai = wai_vec[j])
+    lasso_out <- fit_lasso(data_obj)
+  
+    # get percentages of strong/wai/wbc indicators correctly identified
+    pct_out <- check_pct_identified(data_obj, lasso_out)
+  
+    # assign above results to a vector
+    pct_strong_vec[i] <- pct_out$pct_strong_identified
+    pct_wai_vec[i] <- pct_out$pct_wai_identified
+    pct_wbc_vec[i] <- pct_out$pct_wbc_identified
+    type1_error_vec[i] <- pct_out$type1_error
+    power_vec[i] <- pct_out$power
+  
+  } 
+  
+  # combine to data frame
+  varying_wai_out_lasso[((j-1)*n_sim+1):(j*n_sim), 2] <- pct_strong_vec
+  varying_wai_out_lasso[((j-1)*n_sim+1):(j*n_sim), 3] <- pct_wai_vec
+  varying_wai_out_lasso[((j-1)*n_sim+1):(j*n_sim), 4] <- pct_wbc_vec
+  varying_wai_out_lasso[((j-1)*n_sim+1):(j*n_sim), 5] <- type1_error_vec
+  varying_wai_out_lasso[((j-1)*n_sim+1):(j*n_sim), 6] <- power_vec
+  
+  print(paste("current j: ", j))
+    
+}
+
+write.csv(varying_wai_out_lasso, "./simulation_outputs/varying_wai_out_lasso.csv")
+```
+
+
+
 
 ## simulation of beta_sse
 ### Varying correlation (0.1, 0.3, 0.5, 0.7, 0.9)
@@ -358,4 +596,8 @@ write.csv(sse_lasso,"output_analysis_files/sse_lasso.csv")
 ```
 
 
+## 
+```{r}
+
+```
 
