@@ -21,7 +21,7 @@ lasso_cor_simdata <- read_csv("./simulation_outputs/varying_corr_out_lasso.csv")
 Change the above data to long format for easier visualization
 ```{r}
 forward_cor_simdata_cleaned <- forward_cor_simdata %>% 
-  dplyr::select(-1) %>% 
+  select(-1) %>% 
   mutate(cor_val = factor(cor_val)) %>% 
   pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
                            names_to = "metric") %>% 
@@ -30,7 +30,7 @@ forward_cor_simdata_cleaned <- forward_cor_simdata %>%
 forward_cor_simdata_cleaned
 
 lasso_cor_simdata_cleaned <- lasso_cor_simdata %>% 
-  dplyr::select(-1) %>% 
+  select(-1) %>% 
   mutate(cor_val = factor(cor_val)) %>% 
   pivot_longer(cols = c(pct_strong_vec, pct_wai_vec, pct_wbc_vec, type1_error_vec, power_vec),
                            names_to = "metric") %>% 
@@ -52,7 +52,7 @@ combined_cor_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~cor_val, nrow = 1) +
-  labs(title = "% WBC predictors selected for different correlations \n between strong and WBC predictors",
+  labs(title = "% WBC predictors selected for differeent correlations \n between strong and WBC predictors",
        y = "%")
 
 # WAI
@@ -63,7 +63,7 @@ combined_cor_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~cor_val, nrow = 1) +
-  labs(title = "% WAI predictors selected for different correlations \n between strong and WBC predictors",
+  labs(title = "% WAI predictors selected for differeent correlations \n between strong and WBC predictors",
        y = "%")
 
 ```
@@ -78,8 +78,8 @@ combined_cor_simdata %>%
   geom_boxplot(alpha = 0.5, width = 0.2) +
   #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
   facet_wrap(~cor_val, nrow = 1) +
-  labs(title = "Power (%) for different correlations between strong and WBC predictors",
-       y = "power (%)")
+  labs(title = "Power (%) for differeent correlations between strong and WBC predictors",
+       y = "%")
 
 # Type-1 error
 combined_cor_simdata %>% 
@@ -267,8 +267,5 @@ lasso_cor_simdata %>%
             pct_power = mean(power_vec),
             type_1_error = mean(type1_error_vec))
 ```
-
-
-
 
 

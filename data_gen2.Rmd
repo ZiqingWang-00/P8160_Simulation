@@ -598,6 +598,63 @@ write.csv(sse_lasso,"output_analysis_files/sse_lasso.csv")
 
 ## 
 ```{r}
+# lasso_sse_wbc5_10
+```{r}
+simu_lasso_betasse_wbc<-function(n_sim,n_wbc){
+  beta_sse_lasso=rep(NA,n_sim)
+  pct_weak_identified=rep(NA,n_sim)
+  for (i in 1:n_sim) {
+    print(i)
+    data_obj<-data_gen1(n_wbc = n_wbc)
+    lasso_out<-fit_lasso(data_obj)
+  
+    sse_out<-check_beta_se(data_obj,lasso_out)
+    pct_weak_identified[i]<-check_pct_identified(data_obj,lasso_out)$pct_weak_identified
+    beta_sse_lasso[i]=sse_out$sse
+  }
+  ##bind results together
+  sim_sse<-data.frame(n_wbc=rep(n_wbc,n_sim),pct_weak_identified,beta_sse_lasso)
+  return(sim_sse)
+}
 
+lasso_wbc_5<-simu_lasso_betasse_wbc(100,5) 
+lasso_wbc_6<-simu_lasso_betasse_wbc(100,6)
+lasso_wbc_7<-simu_lasso_betasse_wbc(100,7)
+lasso_wbc_8<-simu_lasso_betasse_wbc(100,8)
+lasso_wbc_9<-simu_lasso_betasse_wbc(100,9)
+lasso_wbc_10<-simu_lasso_betasse_wbc(100,10)
+lasso_wbc<-rbind(lasso_wbc_5,lasso_wbc_6,lasso_wbc_7,lasso_wbc_8,lasso_wbc_9,lasso_wbc_10)
+write.csv(lasso_wbc,"simulation_outputs/lasso_wbc_5_10.csv")
+```
+
+# forward_sse_wbc_5_10
+```{r}
+simu_forward_betasse_wbc<-function(n_sim,n_wbc){
+  beta_sse_forward=rep(NA,n_sim)
+  pct_weak_identified=rep(NA,n_sim)
+  for (i in 1:n_sim) {
+    print(i)
+    data_obj<-data_gen1(n_wbc = n_wbc)
+    forward_out<-fit_forward(data_obj)
+  
+    sse_out<-check_beta_se(data_obj,forward_out)
+    pct_weak_identified[i]<-check_pct_identified(data_obj,forward_out)$pct_weak_identified
+    beta_sse_forward[i]=sse_out$sse
+  }
+  ##bind results together
+  sim_sse<-data.frame(n_wbc=rep(n_wbc,n_sim),pct_weak_identified,beta_sse_forward)
+  return(sim_sse)
+}
+
+forward_wbc_5<-simu_forward_betasse_wbc(100,5) 
+forward_wbc_6<-simu_forward_betasse_wbc(100,6)
+forward_wbc_7<-simu_forward_betasse_wbc(100,7)
+forward_wbc_8<-simu_forward_betasse_wbc(100,8)
+forward_wbc_9<-simu_forward_betasse_wbc(100,9)
+forward_wbc_10<-simu_forward_betasse_wbc(100,10)
+forward_wbc<-rbind(forward_wbc_5,forward_wbc_6,forward_wbc_7,forward_wbc_8,forward_wbc_9,forward_wbc_10)
+write.csv(forward_wbc,"simulation_outputs/forward_wbc_5_10.csv")
+
+```
 ```
 
