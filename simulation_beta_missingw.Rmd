@@ -1,0 +1,56 @@
+---
+title: "sse_missing_w"
+author: "Xicheng Xie"
+date: "2023-02-25"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
+library(glmnet)
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+forward_wbc<-read.csv("simulation_outputs/forward_wbc_5_10.csv") %>% 
+  select(-1) %>% 
+  mutate(methods="forward") %>% 
+  rename(sse=beta_sse_forward)
+
+lasso_wbc<-read.csv("simulation_outputs/lasso_wbc_5_10.csv")%>% 
+  select(-1) %>% 
+  mutate(methods="lasso") %>% 
+  rename(sse=beta_sse_lasso)
+
+data_wbc_sse<-rbind(forward_wbc,lasso_wbc)
+```
+
+data clean
+```{r}
+data_wbc_sse %>% mutate(pct_weak=n_wbc/40,n_wbc=factor(n_wbc),missing_w_pct=100-pct_weak_identified) %>% 
+  mutate(missingw_pct=cut(missing_w_pct,breaks =c(-Inf,seq(10,90,by=10),Inf),
+                           labels = c("0~0.1","0.1~0.2","0.2~0.3","0.3~0.4","0.4~0.5","0.5~0.6","0.6~0.7","0.7~0.8","0.8~0.9","0.9~1"))) %>% 
+  ggplot(aes(x=missingw_pct,y=sse))+
+  geom_boxplot(alpha = 0.5, width = 0.7,aes(fill=methods))+
+  labs(x="% of missing weak predictors",
+       y="SSE",
+       title = "SSE boxplot in different percentage of missing weak predictors")
+```
+
+```{r}
+data_wbc_sse %>% mutate(pct_weak=n_wbc/40,n_wbc=factor(n_wbc),missing_w_pct=100-pct_weak_identified) %>% 
+  mutate(missingw_pct=cut(missing_w_pct,breaks =c(-Inf,seq(10,90,by=10),Inf),
+                           labels = c("0~0.1","0.1~0.2","0.2~0.3","0.3~0.4","0.4~0.5","0.5~0.6","0.6~0.7","0.7~0.8","0.8~0.9","0.9~1"))) %>%
+  group_by(missingw_pct,methods) %>% 
+  mutate(mse=mean(sse)) %>% 
+  ggplot(aes(x=missingw_pct,y=mse))+
+  geom_point(aes(color=methods))+
+  geom_line(aes(group=methods,color=methods))+
+  labs(x="% of missing weak predictors",
+       y="MSE",
+       title = "MSE in different percentage of missing weak predictors")
+```
+
+
