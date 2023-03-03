@@ -148,6 +148,31 @@ combined_wbc_simdata %>%
        y = "type-1 error %")
 ```
 
+```{r}
+# % wbc identified
+combined_wbc_simdata %>% 
+  filter(metric == "pct_wbc_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~wbc_num, nrow = 1) +
+  labs(title = "% WBC predictors selected for different number of WBC predictors",
+       y = "%")
+
+# % wai identified
+combined_wbc_simdata %>% 
+  filter(metric == "pct_wai_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~wbc_num, nrow = 1) +
+  labs(title = "% WAI predictors selected for different number of WBC predictors",
+       y = "%")
+```
+
+
 ## Varying the number of WAI predictors
 ```{r}
 lasso_wai_simdata <- read_csv("./simulation_outputs/varying_wai_out_lasso.csv")
@@ -196,9 +221,52 @@ combined_wai_simdata %>%
   labs(title = "Type-1 error rate (%) for different number of WAI predictors",
        y = "%")
 
+# % WBC predictors selected
+combined_wai_simdata %>% 
+  filter(metric == "pct_wbc_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~wai_vec, nrow = 1) +
+  labs(title = "% WBC predictors selected for different number of WAI predictors",
+       y = "%")
+
+# % WAI predictors selected
+combined_wai_simdata %>% 
+  filter(metric == "pct_wai_vec") %>% 
+  ggplot(aes(x = method, y = value)) +
+  geom_violin(alpha = 0.5, width = 1, aes(fill = method)) + 
+  geom_boxplot(alpha = 0.5, width = 0.2) +
+  #geom_jitter(alpha = 0.8, width = 0.2, aes(color = method)) +
+  facet_wrap(~wai_vec, nrow = 1) +
+  labs(title = "% WAI predictors selected for different number of WAI predictors",
+       y = "%")
+
 ```
 
 
+## Tables
+```{r}
+# scenario 1
+forward_cor_simdata %>%
+  dplyr::select(-1) %>%
+  group_by(cor_val) %>%
+  summarize(pct_strong_selected = mean(pct_strong_vec),
+            pct_wai_selected = mean(pct_wai_vec),
+            pct_wbc_selected = mean(pct_wbc_vec),
+            pct_power = mean(power_vec),
+            type_1_error = mean(type1_error_vec))
+
+lasso_cor_simdata %>%
+  dplyr::select(-1) %>%
+  group_by(cor_val) %>%
+  summarize(pct_strong_selected = mean(pct_strong_vec),
+            pct_wai_selected = mean(pct_wai_vec),
+            pct_wbc_selected = mean(pct_wbc_vec),
+            pct_power = mean(power_vec),
+            type_1_error = mean(type1_error_vec))
+```
 
 
 
